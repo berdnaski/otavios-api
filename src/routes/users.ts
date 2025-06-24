@@ -1,17 +1,34 @@
-import type { FastifyInstance } from "fastify";
+import type { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
 import { UserController } from "../controllers/UserController";
-import type { CreateUserDTO } from "../@types/dto/CreateUserDTO";
-import type { LoginRequest } from "../@types/dto/LoginRequest";
-import { LoginUserDTO } from "../@types/dto/LoginUserDTO";
+import { isAuth } from "../middlewares/isAuth";
+import { isAdmin } from "../middlewares/isAdmin";
 
-export async function userRoutes(app: FastifyInstance) {
-  const userController = new UserController(app);
+export async function usersRoutes(app: FastifyInstance) {
+    const userController = new UserController();
 
-  app.post<{ Body: CreateUserDTO }>("/auth/register", async (req, reply) => {
-    await userController.create(req, reply);
-  });
+    app.register(async (app) => {
+        app.addHook("onRequest", isAuth);
 
-  app.post<{ Body: LoginUserDTO }>("/auth/login", async (req, reply) => {
-    await userController.login(req, reply);
-  });
+        app.get("/users/", async (req: FastifyRequest, reply: FastifyReply) => {
+            await userController.findAll(reply);
+        });
+
+        app.put(
+            "/users/:userId/commission",
+            async (req, reply) => {
+                await isAdmin(req, reply);
+                await userController.updateCommission(req, reply);
+            }
+        );
+
+        app.get(
+            "/users/:ident",
+            async (
+                req: FastifyRequest<{ Params: { ident: string } }>,
+                reply: FastifyReply
+            ) => {
+                await userController.findOne(req, reply);
+            }
+        );
+    });
 }

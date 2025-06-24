@@ -1,63 +1,73 @@
-import {
-  FastifyInstance,
-  FastifyReply,
-  FastifyRequest,
-} from "fastify";
-
+import { FastifyReply, FastifyRequest } from "fastify";
 import { PrismaUserRepository } from "../repositories/prisma/PrismaUserRepository";
-import { CreateUserUseCase } from "../usecases/auth/create-user";
-import { LoginUserUseCase } from "../usecases/auth/login-user";
-
-import { CreateUserDTO } from "../@types/dto/CreateUserDTO";
-import { LoginRequest } from "../@types/dto/LoginRequest";
+import { FindAllUsersUseCase } from "../usecases/users/find-all-users";
+import { UpdateCommissionRequest } from "../@types/dto/UpdateCommissionRequest";
+import { UpdateCommissionUseCase } from "../usecases/users/update-commission-users";
+import { FindOneUsersUseCase } from "../usecases/users/find-one-users";
 
 export class UserController {
-  constructor(private app: FastifyInstance) {}
-
-  async create(
-    req: FastifyRequest<{ Body: CreateUserDTO }>,
-    reply: FastifyReply
-  ) {
+  async findAll(reply: FastifyReply) {
     try {
       const userRepository = new PrismaUserRepository();
-      const createUserUseCase = new CreateUserUseCase(userRepository);
+      const findAllUsersUseCase = new FindAllUsersUseCase(userRepository);
 
-      const user = await createUserUseCase.execute(req.body);
+      const users = await findAllUsersUseCase.execute();
 
-      const { password, ...userWithoutPassword } = user;
+      const usersWithoutPassword = users.map(({ password, ...user }) => user);
 
-      return reply.status(201).send(userWithoutPassword);
+      return reply.status(200).send(usersWithoutPassword);
     } catch (error: any) {
       return reply.status(400).send({
-        message: error.message || "Erro ao criar o usuário.",
+        message: error.message || "Erro ao buscar usuários.",
       });
     }
   }
 
-  async login(
-    req: FastifyRequest<LoginRequest>,
+  async findOne(
+    req: FastifyRequest<{ Params: { ident: string } }>,
     reply: FastifyReply
   ) {
     try {
+      const { ident } = req.params;
+
       const userRepository = new PrismaUserRepository();
-      const loginUserUseCase = new LoginUserUseCase(userRepository);
+      const findOneUsersUseCase = new FindOneUsersUseCase(userRepository);
 
-      const user = await loginUserUseCase.execute(req.body);
-
-      const token = this.app.jwt.sign({
-        sub: user.id,
-        role: user.role,
-      });
+      const user = await findOneUsersUseCase.execute(ident);
 
       const { password, ...userWithoutPassword } = user;
 
-      return reply.send({
-        token,
-        user: userWithoutPassword,
-      });
+      return reply.status(200).send(userWithoutPassword);
     } catch (error: any) {
-      return reply.status(401).send({
-        message: error.message || "Erro ao fazer login",
+      return reply.status(400).send({
+        message: error.message || "Error fetching user.",
+      });
+    }
+  }
+
+
+  async updateCommission(req: FastifyRequest<UpdateCommissionRequest>, reply: FastifyReply) {
+    try {
+      const loggedUser = req.user as { id: string; role: string };
+
+      if (loggedUser.role !== "ADMIN") {
+        return reply.status(403).send({ message: "Forbidden: Only ADMIN can update commission." });
+      }
+
+      const userRepository = new PrismaUserRepository();
+      const updateCommissionUseCase = new UpdateCommissionUseCase(userRepository);
+
+      const updatedUser = await updateCommissionUseCase.execute({
+        userId: req.params.userId,
+        commission: req.body.commission,
+      });
+
+      const { password, ...userWithoutPassword } = updatedUser;
+
+      return reply.send(userWithoutPassword);
+    } catch (error: any) {
+      return reply.status(400).send({
+        message: error.message || "Error updating commission.",
       });
     }
   }

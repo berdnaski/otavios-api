@@ -15,4 +15,21 @@ export class PrismaUserRepository implements IUserRepository {
     async create(data: CreateUserPrismaDTO): Promise<User> {
         return prisma.user.create({ data });
     }
+
+    async findAll(): Promise<User[]> {
+        return prisma.user.findMany();
+    }
+
+    async updateCommission(userId: string, commission: number): Promise<User> {
+        return prisma.user.update({
+            where: { id: userId },
+            data: { commission },
+        });
+    }
+
+    async findOne(ident: string): Promise<User | null> {
+        return prisma.user.findUnique({
+            where: { id: ident },
+        });
+    }
 }

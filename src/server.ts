@@ -1,6 +1,7 @@
 import Fastify from 'fastify';
-import { userRoutes } from './routes/users';
 import jwt from '@fastify/jwt';
+import { authRoutes } from './routes/auth';
+import { usersRoutes } from './routes/users';
 
 const app = Fastify();
 
@@ -11,7 +12,8 @@ app.register(jwt, {
     }
 });
 
-app.register(userRoutes);
+app.register(authRoutes);
+app.register(usersRoutes);
 
 app.listen({ port: 3333 }).then(() => {
     console.log('Server is running on http://localhost:3333');
