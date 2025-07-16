@@ -3,28 +3,33 @@ import jwt from '@fastify/jwt';
 import { authRoutes } from './routes/auth';
 import { usersRoutes } from './routes/users';
 import { appointmentRoutes } from './routes/appointment';
-import cors from '@fastify/cors'
+import cors from '@fastify/cors';
 import fastifyCookie from '@fastify/cookie';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const app = Fastify();
 
 app.register(cors, {
-  origin: 'http://localhost:3000',
+  origin: true,
 });
 
 app.register(fastifyCookie);
 
 app.register(jwt, {
-    secret: 'dpasojdasokfdasokfpsafopsak',
-    sign: {
-        expiresIn: '1h',
-    }
+  secret: process.env.JWT_SECRET || 'fallback-secret',
+  sign: {
+    expiresIn: process.env.JWT_EXPIRES_IN || '1h',
+  },
 });
 
 app.register(authRoutes);
 app.register(usersRoutes);
 app.register(appointmentRoutes);
 
-app.listen({ port: 3333 }).then(() => {
-    console.log('Server is running on http://localhost:3333');
-})
+const port = Number(process.env.PORT) || 3333;
+
+app.listen({ port }).then(() => {
+  console.log(`Server is running on http://localhost:${port}`);
+});
