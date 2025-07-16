@@ -30,6 +30,6 @@ app.register(appointmentRoutes);
 
 const port = Number(process.env.PORT) || 3333;
 
-app.listen({ port }).then(() => {
-  console.log(`Server is running on http://localhost:${port}`);
+app.listen({ port, host: "0.0.0.0" }).then(() => {
+  console.log(`✅ Server is running on http://0.0.0.0:${port}`);
 });
