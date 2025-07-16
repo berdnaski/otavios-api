@@ -34,31 +34,34 @@ export class AuthController {
     }
   }
 
-  async login(
-    req: FastifyRequest<LoginRequest>,
-    reply: FastifyReply
-  ) {
-    try {
-      const userRepository = new PrismaUserRepository();
-      const loginUserUseCase = new LoginUserUseCase(userRepository);
+async login(
+  req: FastifyRequest<LoginRequest>,
+  reply: FastifyReply
+) {
+  try {
+    const userRepository = new PrismaUserRepository();
+    const loginUserUseCase = new LoginUserUseCase(userRepository);
 
-      const user = await loginUserUseCase.execute(req.body);
+    const user = await loginUserUseCase.execute(req.body);
 
-      const token = this.app.jwt.sign({
-        sub: user.id,
-        role: user.role,
-      });
+    const token = this.app.jwt.sign({
+      sub: user.id,
+      role: user.role,
+    });
 
-      const { password, ...userWithoutPassword } = user;
+    const { password, ...userWithoutPassword } = user;
 
-      return reply.send({
-        token,
+    reply
+      .send({
         user: userWithoutPassword,
+        token: token
       });
-    } catch (error: any) {
-      return reply.status(401).send({
-        message: error.message || "Erro ao fazer login",
-      });
-    }
+
+  } catch (error: any) {
+    return reply.status(401).send({
+      message: error.message || "Erro ao fazer login",
+    });
   }
+}
+
 }

@@ -9,6 +9,22 @@ export async function appointmentRoutes(app: FastifyInstance) {
     app.register(async (app) => {
         app.addHook("onRequest", isAuth);
 
+        app.get("/appointments/summary", async (req, reply) => {
+            await appointmentController.summary(req, reply);
+        });
+
+        app.get("/appointments/summary-range", async (req, reply) => {
+            await appointmentController.summaryRange(req, reply);
+        });
+
+        app.get("/appointments/next", async (req, reply) => {
+            await appointmentController.next(req, reply);
+        });
+
+        app.get("/appointments/summary-by-barber", async (req, reply) => {
+            await appointmentController.summaryByBarber(req, reply);
+        });
+
         app.post<{ Body: CreateAppointmentDTO }>("/appointments", async (req, reply) => {
             await appointmentController.create(req, reply);
         })
@@ -25,5 +41,9 @@ export async function appointmentRoutes(app: FastifyInstance) {
         app.put<{ Params: { appointmentId: string }, Body: CreateAppointmentDTO }>("/appointments/:appointmentId", async (req, reply) => {
             await appointmentController.update(req, reply);
         })
+
+        app.delete<{ Params: { appointmentId: string } }>("/appointments/:appointmentId", async (req, reply) => {
+            await appointmentController.delete(req, reply);
+        });
     });
 }

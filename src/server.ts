@@ -3,8 +3,16 @@ import jwt from '@fastify/jwt';
 import { authRoutes } from './routes/auth';
 import { usersRoutes } from './routes/users';
 import { appointmentRoutes } from './routes/appointment';
+import cors from '@fastify/cors'
+import fastifyCookie from '@fastify/cookie';
 
 const app = Fastify();
+
+app.register(cors, {
+  origin: 'http://localhost:3000',
+});
+
+app.register(fastifyCookie);
 
 app.register(jwt, {
     secret: 'dpasojdasokfdasokfpsafopsak',
